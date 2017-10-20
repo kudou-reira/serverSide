@@ -1,4 +1,5 @@
 import React from 'react';
+import App from './app';
 import HomePage from './pages/homePage';
 import UsersListPage, { loadData } from './pages/usersListPage';
 
@@ -14,13 +15,20 @@ import UsersListPage, { loadData } from './pages/usersListPage';
 
 export default [
 	{
-		path: '/',
-		...HomePage,
-		exact: true
-	},
-	{
-		...loadData,
-		path: '/users',
-		...UsersListPage
+		...App,
+		routes: [
+			{
+				path: '/',
+				...HomePage,
+				exact: true
+			},
+			{
+				...loadData,
+				path: '/users',
+				...UsersListPage
+			}
+		]
 	}
+
 ];
+
