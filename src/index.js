@@ -3,28 +3,29 @@
 // const renderToString = require('react-dom/server').renderToString;
 // const Home = require('./client/components/home').default;
 
+//polyfill gives babel methods
+import 'babel-polyfill';
 import express from 'express';
-import React from 'react';
-import { renderToString } from 'react-dom/server';
-import Home from './client/components/home';
+import { matchRoutes } from 'react-router-config';
+import Routes from './client/Routes';
+import renderer from './helpers/renderer';
+import createStore from './helpers/createStore';
 
 const app = express();
 
 app.use(express.static('public'));
-app.get('/', (req, res) => {
-	const content = renderToString(<Home />)
+app.get('*', (req, res) => {
+	const store = createStore();
+	// do all the store outside of renderer
+	const promises = matchRoutes(Routes, req.path).map(({ route }) => {
+		return route.loadData ? route.loadData(store) : null;
+	});
 
-	const html = `
-		<html>
-			<head></head>
-			<body>
-				<div>${content}</div>
-				<script src="bundle.js"></script>
-			</body>
-		</html>
-	`;
-
-	res.send(html);
+	//promise all is a native function that takes an array of promises and returns one single array
+	Promise.all(promises).then(() => {
+		// initialize and load data into store
+		res.send(renderer(req, store));
+	});
 });
 
 app.listen(3000, () => {
